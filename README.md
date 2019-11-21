@@ -1,6 +1,7 @@
 # React-native-test
 
-Created a sample react native application with login functionality and mocked backend communication.
+Simple React-native App with private routes and json data fetch mock. React-native, Express.
+Login functionality and mocked backend communication.
 
 Application idea - all in one remote to control IoT devices.
 
