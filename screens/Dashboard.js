@@ -7,13 +7,13 @@ import {
     Image
 } from 'react-native';
 import { Slider } from 'react-native-elements';
+import config from '../config.json'
 
 export default class Account extends Component {
     constructor(props){
         super(props);
         this.state = {
-          list: [],
-          value: 21
+          list: []
         }
       }
 
@@ -23,34 +23,35 @@ export default class Account extends Component {
     }
 
     getItems = () => {
-        // fetch('/api/getDevices/')
-        // .then(res => res.json())
-        // .then(res => {
-        //     this.setState({list : res.data});
-        // })
-        // .catch(error => {
-        //     this.setState({list : {error: true}});
-        // });
-
-        setTimeout(() => {
+        fetch(config.backend + '/api/getDevices/')
+        .then(res => res.json())
+        .then(res => {
             this.setState({list : res.data});
-          }, 1000)
+        })
+        .catch(error => {
+            this.setState({list : {error: true}});
+        });
       }
 
     render() {
         const { list } = this.state;
+        let room_num = -1;
+
         return (
             <ScrollView>
                 {!!list.loading && <Text>Loading</Text>}
                 {!!list.length &&
                    list.map((item) => {
+                        room_num++;
+                        let device_num = -1;
                         return(
                         <View>
                         <Text style={{bold: 'true', fontSize: 30}}>{item.room}</Text>
                         {/* printing devices */}
                         {item.devices.map((device) => {
-                            if(device.type == 'heater') return Heater(device);
-                            if(device.type == 'light') return Light(device);
+                            device_num++;
+                            if(device.type == 'heater') return <Heater device={{device}} device_num={{device_num}} room={{room_num}}/>;
+                            if(device.type == 'light') return <Light device={{device}} device_num={{device_num}} room={{room_num}}/>;
                             return(DeviceError(device));
                         })}
                         <View
@@ -70,43 +71,83 @@ export default class Account extends Component {
     }
 }
 
-function Heater(device) {
+class Heater extends Component {
+  constructor(props){
+    super(props);
+    this.state = {
+      temperature: this.props.device.device.data.temperature
+    }
+  }
+
+  componentDidMount() {
+    this.setState({temperature: this.props.device.device.data.temperature});
+  }
+
+  changeTemp = (newValue) => {
+    fetch(config.backend + '/api/changeTemp/?room=' + this.props.room.room_num + '&device=' + this.props.device_num.device_num + '&value=' + newValue)
+    .then(res => res.json())
+    .then(res=> {
+      this.setState({temperature: res.temperature});
+    });
+  };
+
+  render() {
     return (
     <View style={{backgroundColor: '#e8e3e3', marginTop: 5, marginBottom: 5}}>
         <View style={{flex: 1, flexDirection: 'row'}}>
-        <Text style={{ margin: 5, bold: 'true'}}>{device.name} {"\n"}</Text>
+        <Text style={{ margin: 5, bold: 'true'}}>{this.props.device.name} {"\n"}</Text>
         <Image
           source={{uri: 'https://img.icons8.com/windows/32/000000/air-conditioner.png'}}
           style={{marginLeft:5, width:30, height:30}}
         />
         </View>
-
-            {/* Type: {device.type} {"\n"} */}
             <Slider
-                style={{marginLeft: 10, marginRight: 10}}
-                value={device.data.temperature}
+                style={{marginLeft: 10, marginRight: 10, width:'100%'}}
+                value={parseInt(this.state.temperature)}
+                step={1}
+                minimumValue={10}
+                maximumValue={30}
+                onValueChange={this.changeTemp}
             />
-            <Text style={{margin: 5 }}>Value: 21°C</Text>
-            {/* Temperature: {device.data.temperature} */}
-        
+            <Text style={{marginLeft: 10, marginRight: 10}}>Value: {this.state.temperature}</Text>        
     </View>
     );
+  }
   }  
 
-  function Light(device) {
+  class Light extends Component {
+    constructor(props){
+      super(props);
+      this.state = {
+        state: this.props.device.device.data.state
+      }
+    }
+
+    changeLight = () => {
+      console.log('change light');
+      fetch(config.backend + '/api/changeLight/?room=' + this.props.room.room_num + '&device=' + this.props.device_num.device_num)
+      .then(res => res.json())
+      .then(res => {
+        console.log(res);
+        this.setState({state: res.state});
+      });
+    };
+
+    render(){
     return (
     <View style={{backgroundColor: '#e8e3e3', marginTop: 5, marginBottom: 5}}>
         <View style={{flex: 1, flexDirection: 'row'}}>
-        <Text style={{margin: 5, bold: 'true'}}>{device.name} {"\n"}</Text>
+        <Text style={{margin: 5, bold: 'true'}}>{this.props.device.name} {"\n"}</Text>
         <Image
           source={{uri: 'https://img.icons8.com/pastel-glyph/50/000000/light.png'}}
           style={{marginLeft:5, width:30, height:30}}
         />
         </View>
-        <Button
-            title={device.data.state ? "On" : "Off"}/>
+        <Button onPress={this.changeLight} title={(this.state.state) ? 'Turn off' : 'Turn on'}>
+        </Button>
     </View>
     );
+    }
   } 
 
   function DeviceError(device) {
@@ -119,12 +160,3 @@ function Heater(device) {
     </View>
     );
   }
-
-const res = {data :[{
-    room: 'Livingroom',
-    devices: [{name: 'F500', type: 'heater', data: {temperature: '21'}},
-              {name: 'LED100', type: 'light', data: {state: false}}],
-  }, {
-    room: 'Bedroom',
-    devices: [{name: 'LED150', type: 'light', data: {state: true}}]
-  }]};
