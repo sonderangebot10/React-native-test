@@ -5,9 +5,10 @@ import {
     View,
     ScrollView,
     Button,
-    Picker
+    Picker,
+    Alert
 } from 'react-native';
-import { Container, Header, Content, Accordion } from "native-base";
+import config from '../config.json';
 
 export default class Account extends Component {
     constructor(props){
@@ -23,27 +24,32 @@ export default class Account extends Component {
     }
 
     getItems = () => {
-        // fetch('/api/getDevices/')
-        // .then(res => res.json())
-        // .then(res => {
-        //     this.setState({list : res.data});
-        // })
-        // .catch(error => {
-        //     this.setState({list : {error: true}});
-        // });
-
-        setTimeout(() => {
+        console.log('GET ITEMS');
+        fetch(config.backend + '/api/getDevices/')
+        .then(res => res.json())
+        .then(res => {
             this.setState({list : res.data});
-          }, 1000)
+        })
+        .catch(error => {
+            this.setState({list : {error: true}});
+        });
       }
+
+    addRoom = () => {
+        console.log(this.state.room_name);
+        fetch(config.backend + '/api/addRoom/?room_name=' + this.state.room_name)
+        .then(res => this.getItems());
+    }
 
     render() {
         const { list } = this.state;
+        let room = -1;
         return (
             <ScrollView>
                 {!!list.loading && <Text>Loading</Text>}
                 {!!list.length &&(
                    list.map((item) => {
+                       room++;
                         return(
                         <View>
                         <Text style={{bold: 'true', fontSize: 30}}>{item.room}</Text>
@@ -52,7 +58,7 @@ export default class Account extends Component {
                             if(device.type == 'heater' || 'light') return OldDevice(device);
                             return(DeviceError(device));
                         })}
-                        <AddNew />
+                        <AddNew room={{room}} refresh={this.getItems}/>
                         <View
                         style={{
                             paddingBottom: 10,
@@ -68,9 +74,12 @@ export default class Account extends Component {
                 }
             {!!list.length &&
             <View style={{paddingBottom: 40}}>
-            <TextInput style={{margin: 5 }} placeholder='Room name' />
+            <TextInput style={{margin: 5 }} 
+            placeholder='Room name' 
+            onChangeText={text => this.setState({ room_name: text })}/>
             <Button
-            title="Add"/>
+            title="Add"
+            onPress={this.addRoom}/>
             </View>
             }
             </ScrollView>
@@ -78,37 +87,68 @@ export default class Account extends Component {
     }
 }
 
-function AddNew() {
+function AddNew(props) {
+const [device_type, setDevice_type] = React.useState('');
+const [device_name, setDevice_name] = React.useState('');
+
+const handleChange = event => {
+    setDevice_type(event.target.value);
+};
+
+const addDevice = () => {
+    console.log('ADD DEVICE: ' + props.room.room + " " + device_type + " " + device_name);
+    fetch(config.backend + '/api/addDevice/?room=' + props.room.room + '&type=' + device_type + '&name=' + device_name)
+    .then(res => props.refresh());
+}
+
 return(
     <View style={{backgroundColor: '#e8e3e3', marginTop: 5, marginBottom: 5}}>
-        <TextInput style={{margin: 5 }} placeholder='Device name' />
+        <TextInput 
+            style={{margin: 5 }} 
+            placeholder='Device name'
+            onChangeText={text => setDevice_name(text)}/>
+        <Picker
+            style={{height: 50, width: 100}}
+            selectedValue={device_type}
+            onValueChange={(itemValue, itemIndex) =>
+                setDevice_type(itemValue)
+              }>
+            <Picker.Item label="Heater" value="heater" />
+            <Picker.Item label="Light" value="light" />
+        </Picker>
         <Button
-        title="Add"/>
+        title="Add"
+        onPress={addDevice}/>
     </View>
 )
 }
 
   function OldDevice(device) {
+    const ns_msg = () => {
+        Alert.alert(
+            'Error',
+            'Not Supported Yet',
+            [
+              {text: 'OK', onPress: () => console.log('OK Pressed')},
+            ],
+            {cancelable: false},
+          );
+    }
+
       return(
       <View style={{backgroundColor: '#e8e3e3', marginTop: 5, marginBottom: 5}}>
         <TextInput style={{margin: 5 }} placeholder='Device name' value={device.name} />
         <Picker
-            selectedValue={'Heater'}>
+            selectedValue={device.type}>
             <Picker.Item label="Heater" value="heater" />
             <Picker.Item label="Light" value="light" />
         </Picker>
-        <TextInput style={{margin: 5 }} placeholder='Endpoint url'/>
+        <TextInput 
+            style={{margin: 5 }} 
+            placeholder='Endpoint url'/>
         <Button
-        title="Save"/>
+        title="Save"
+        onPress={ns_msg}/>
       </View>
       )
   }
-
-const res = {data :[{
-    room: 'Livingroom',
-    devices: [{name: 'F500', type: 'heater', data: {temperature: '21'}},
-              {name: 'LED100', type: 'light', data: {state: false}}],
-  }, {
-    room: 'Bedroom',
-    devices: [{name: 'LED150', type: 'light', data: {state: true}}]
-  }]};

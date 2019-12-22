@@ -39,6 +39,9 @@ export default class Account extends Component {
 
         return (
             <ScrollView>
+              <Button
+              title="Refresh"
+              onPress={this.getItems}/>
                 {!!list.loading && <Text>Loading</Text>}
                 {!!list.length &&
                    list.map((item) => {
