@@ -37,21 +37,25 @@ handleSubmit(e) {
 
   this.setState({ loading: true });
 
-  setTimeout(() => {
-    if(userService.login(username, password) != ''){
-      this.props.onLoginPress();
-    }
-    else this.setState({ error: "Wrong login information", loading: false })
-  }, 1000)
+  // setTimeout(() => {
+  //   if(userService.login(username, password) != ''){
+  //     this.props.onLoginPress();
+  //   }
+  //   else this.setState({ error: "Wrong login information", loading: false })
+  // }, 1000)
 
-  // (userService.login(username, password))
-  // .then(
-  //     user => {
-  //       const { from } = this.props.location.state || { from: { pathname: "/" } };
-  //       this.props.history.push(from);
-  //     },
-  //     error => this.setState({ error, loading: false })
-  // );
+  (userService.login(username, password))
+  .then(
+      res => {
+        if (res == 'success') {
+          this.props.onLoginPress();
+        }
+        else {
+          this.setState({ loading: false, error:"Invalid login information" });
+        }
+      },
+      error => this.setState({ error, loading: false })
+  );
 }
   
   render() {

@@ -25,7 +25,8 @@ export default class Main extends Component {
               <Tab heading="Account" style={{padding: 20}}>
                 <Tab1 {...this.props}/>
               </Tab>
-              <Tab heading="Dashboard" style={{padding: 20}}>
+              <Tab heading="Dashboard" 
+              style={{padding: 20}}>
                 <Tab2 />
               </Tab>
               <Tab heading="Modify" style={{padding: 20}}>

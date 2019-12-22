@@ -1,4 +1,6 @@
 import { AsyncStorage } from 'react-native';
+import { enableExpoCliLogging } from 'expo/build/logs/Logs';
+import config from '../config.json';
 
 export const userService = {
     login,
@@ -6,34 +8,34 @@ export const userService = {
 };
 
 function login(username, password) {
-    if(username === 'test' && password === 'test') {
-        let user = (username + ':' + password);
-        AsyncStorage.setItem('user', JSON.stringify(user));
-        return user;
-    }
-    return '';
+    // if(username === 'test' && password === 'test') {
+    //     let user = (username + ':' + password);
+    //     AsyncStorage.setItem('user', JSON.stringify(user));
+    //     return user;
+    // }
+    // return '';
 
-    //EMULATOR CANNOT SEE LOCALHOST
+    const requestOptions = {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+    };
 
-    // const requestOptions = {
-    //     method: 'POST',
-    //     headers: { 'Content-Type': 'application/json' },
-    //     body: JSON.stringify({ username, password })
-    // };
-
-    // return fetch('/users/authenticate', requestOptions)
-    //     .then(handleResponse)
-    //     .then(user => {
-    //         console.log(2);
-    //         if (user) {
-    //             user.authdata = window.btoa(username + ':' + password);
-    //             AsyncStorage.setItem('user', JSON.stringify(user));
-    //         }
-    //         return user;
-    //     })
-    //     .catch(err => {
-    //         console.log("Error with server. " + err);
-    //     })
+    return fetch(config.backend + '/users/authenticate', requestOptions)
+        .then(handleResponse)
+        .then(user => {
+            console.log('authentication');
+            if (user) {
+                let user = (username + ':' + password);
+                AsyncStorage.setItem('user', JSON.stringify(user));
+                return 'success';
+            }
+            return user;
+        })
+        .catch(err => {
+            console.log("Error with server. " + err);
+            return err;
+        })
 }
 
 function handleResponse(response) {
