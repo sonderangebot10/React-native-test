@@ -1,4 +1,4 @@
 {  
-    "backend": "http://35.228.126.12:5000",
+    "backend": "https://homeswitch-262815.appspot.com",
     "backend-ngrok": "https://d21b3989.ngrok.io"
 }
