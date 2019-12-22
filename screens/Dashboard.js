@@ -22,6 +22,10 @@ export default class Account extends Component {
         this.getItems();
     }
 
+    componentWillUnmount() {
+      this.getItems();
+    }
+
     getItems = () => {
         fetch(config.backend + '/api/getDevices/')
         .then(res => res.json())

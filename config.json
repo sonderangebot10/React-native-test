@@ -1,3 +1,4 @@
 {  
-    "backend": "https://d21b3989.ngrok.io"
+    "backend": "http://35.228.126.12:5000",
+    "backend-ngrok": "https://d21b3989.ngrok.io"
 }
